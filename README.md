@@ -97,15 +97,159 @@ class SomeContext extends Something() {}
 ```
 is shorthand for for extending a dynamically generated class.
 It is dynamic inheritance -> you extend a class produced at runtime, not a statically written base class.
+Referred to a a curried constructor function.
 
 
 
+## Creating Effects
 
+- `Effect.succeed(value)` - Creates an effect that succeeds with the given value.
+```txt
+         ┌─── Produces a value of type number
+         │       ┌─── Does not generate any errors
+         │       │      ┌─── Requires no dependencies
+         ▼       ▼      ▼
+Effect<number, never, never>
+```
 
+- `Effect.fail(error)` - Creates an effect that fails with the given error.
 
+### Tagged Error
+Using “tagged” errors (objects with a _tag field) can help identify error types and works well with standard Effect functions, like Effect.catchTag.
 
+```ts
+import { Effect, Data } from "effect"
 
+class HttpError extends Data.TaggedError("HttpError")<{}> {}
 
+//      ┌─── Effect<never, HttpError, never>
+//      ▼
+const program = Effect.fail(new HttpError())
+```
+
+## Error Tracking
+
+```ts
+import { Effect } from "effect"
+
+const divide = (a: number, b: number): Effect.Effect<number, Error> => 
+    b === 0
+        ? Effect.fail(new Error("Division by zero"))
+        : Effect.succeed(a / b)
+```
+
+### Modeling Synchronous Effects
+A “thunk” is a function that takes no arguments and may return some value.
+Thunks are useful for delaying the computation of a value until it is needed.
+To model synchronous side effects, Effect provides the `Effect.sync` and `Effect.try` constructors, which accept a thunk.
+
+**sync**
+Creates an Effect that represents a synchronous side-effectful computation.
+Use Effect.sync when you are sure the operation will not fail.
+
+The provided function (thunk) must not throw errors; if it does, the error will be treated as a “defect”.
+
+```ts
+import { Effect } from "effect"
+
+const log = (message: string) =>
+  Effect.sync(() => {
+    console.log(message) // side effect
+  })
+
+//      ┌─── Effect<void, never, never>
+//      ▼
+const program = log("Hello, World!")
+```
+
+**try**
+Creates an Effect that represents a synchronous computation that might fail.
+```ts
+import { Effect } from "effect"
+
+const parse = (input: string) =>
+  // This might throw an error if input is not valid JSON
+  Effect.try(() => JSON.parse(input))
+
+//      ┌─── Effect<any, UnknownException, never>
+//      ▼
+const program = parse("")
+```
+
+Effect.try supports an overload that allows you to specify how caught exceptions should be transformed:
+```ts
+import { Effect } from "effect"
+
+const parse = (input: string) =>
+  Effect.try({
+    // JSON.parse may throw for bad input
+    try: () => JSON.parse(input),
+    // remap the error
+    catch: (unknown) => new Error(`something went wrong ${unknown}`)
+  })
+
+//      ┌─── Effect<any, Error, never>
+//      ▼
+const program = parse("")
+```
+
+### Modeling Asynchronous Effects
+
+**promise**
+Creates an Effect that represents an asynchronous computation guaranteed to succeed.
+The provided function (thunk) returns a Promise that should never reject; if it does, the error will be treated as a “defect”.
+
+```ts
+import { Effect } from "effect"
+
+const delay = (message: string) =>
+  Effect.promise<string>(
+    () =>
+      new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(message)
+        }, 2000)
+      })
+  )
+
+//      ┌─── Effect<string, never, never>
+//      ▼
+const program = delay("Async operation completed successfully!")
+```
+
+**tryPromise**
+Creates an Effect that represents an asynchronous computation that might fail.
+
+```ts
+import { Effect } from "effect"
+
+const getTodo = (id: number) =>
+  // Will catch any errors and propagate them as UnknownException
+  Effect.tryPromise(() =>
+    fetch(`https://jsonplaceholder.typicode.com/todos/${id}`)
+  )
+
+//      ┌─── Effect<Response, UnknownException, never>
+//      ▼
+const program = getTodo(1)
+```
+
+If you want more control over what gets propagated to the error channel, you can use an overload of Effect.tryPromise that takes a remapping function:
+```ts
+import { Effect } from "effect"
+
+const getTodo = (id: number) =>
+  Effect.tryPromise({
+    try: () => fetch(`https://jsonplaceholder.typicode.com/todos/${id}`),
+    // remap the error
+    catch: (unknown) => new Error(`something went wrong ${unknown}`)
+  })
+
+//      ┌─── Effect<Response, Error, never>
+//      ▼
+const program = getTodo(1)
+
+```
 
 
 # Resources
