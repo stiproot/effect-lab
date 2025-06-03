@@ -397,5 +397,5 @@ console.log(Effect.runSync(good)) // Output: 2
 ---
 
 # Resources
-- [CONCEPTS.md](CONCEPTS.md) - Detailed explanation of TS concepts
+- [CONCEPTS.md](.docs/CONCEPTS.md) - Detailed explanation of TS concepts
 - [Constructor Cheatsheet](https://effect.website/docs/getting-started/creating-effects/#cheatsheet)
