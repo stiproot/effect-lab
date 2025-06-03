@@ -99,7 +99,7 @@ is shorthand for for extending a dynamically generated class.
 It is dynamic inheritance -> you extend a class produced at runtime, not a statically written base class.
 Referred to a a curried constructor function.
 
-
+---
 
 ## Creating Effects
 
@@ -126,6 +126,8 @@ class HttpError extends Data.TaggedError("HttpError")<{}> {}
 //      ▼
 const program = Effect.fail(new HttpError())
 ```
+
+---
 
 ## Error Tracking
 
@@ -359,74 +361,41 @@ Abort signal received
 */
 ```
 
-The `Generator<TYield, TReturn, TNext>` type is often used for this:
-- TYield: The type of values yielded.
-- TReturn: The type of the value returned when the generator completes (via return or reaching the end).
-- TNext: The type of the argument passed to next().
+---
+
+## Suspended Effects
+
+`Effect.suspend` is used to delay the creation of an effect. 
+It allows you to defer the evaluation of an effect until it is actually needed. 
+The `Effect.suspend` function takes a thunk that represents the effect, and it wraps it in a suspended effect.
 
 ```ts
-function* fibonacci(): Generator<number, void, boolean> {
-  let a = 0;
-  let b = 1;
-  while (true) {
-    const reset = yield a; // 'reset' will be of type boolean (from TNext)
-    if (reset) {
-      a = 0;
-      b = 1;
-    } else {
-      [a, b] = [b, a + b];
-    }
-  }
-}
-
-const fibGen = fibonacci();
-console.log(fibGen.next());      // { value: 0, done: false }
-console.log(fibGen.next());      // { value: 1, done: false }
-console.log(fibGen.next(true));  // { value: 0, done: false } (resets due to `true`)
-console.log(fibGen.next());      // { value: 1, done: false }
+const suspendedEffect = Effect.suspend(() => effect)
 ```
 
-Key characteristics of yield*:
-- Delegates iteration: It essentially "flattens" the iteration of nested iterables.
-- Forwards next(), return(), and throw(): The yield* operator forwards calls to next(), return(), and throw() methods from the outer generator to the inner delegated iterator.
-- Returns the delegated iterator's return value: When the delegated iterator finishes (its done property becomes true), the value property of its final IteratorResult is returned by the yield* expression in the delegating generator. This is a crucial distinction from yield, which only yields the value.
+## Lazy Evaluation
+When you want to defer the evaluation of an effect until it is required. 
+This can be useful for optimizing the execution of effects, especially when they are not always needed or when their computation is expensive.
+
+Also, when effects with side effects or scoped captures are created, use Effect.suspend to re-execute on each invocation.
 
 ```ts
-function* generateNumbers(): Generator<number> {
-  yield 1;
-  yield 2;
-}
+import { Effect } from "effect"
 
-function* generateLetters(): Generator<string> {
-  yield 'a';
-  yield 'b';
-}
+let i = 0
 
-function* combinedGenerator(): Generator<number | string, string, undefined> {
-  yield 0;
-  yield* generateNumbers(); // Delegates to generateNumbers()
-  yield 'c';
-  const message = yield* generateLetters(); // Delegates to generateLetters(), message will be 'b' if letters returns a value
-  console.log("Returned from letters generator:", message); // This line will execute after generateLetters finishes
-  yield 3;
-  return "All done!"; // This is the final return value of combinedGenerator
-}
+const bad = Effect.succeed(i++)
+const good = Effect.suspend(() => Effect.succeed(i++))
 
-const combinedGen = combinedGenerator();
+console.log(Effect.runSync(bad)) // Output: 0
+console.log(Effect.runSync(bad)) // Output: 0
 
-console.log(combinedGen.next()); // { value: 0, done: false }
-console.log(combinedGen.next()); // { value: 1, done: false } (from generateNumbers)
-console.log(combinedGen.next()); // { value: 2, done: false } (from generateNumbers)
-console.log(combinedGen.next()); // { value: 'c', done: false }
-console.log(combinedGen.next()); // { value: 'a', done: false } (from generateLetters)
-console.log(combinedGen.next()); // { value: 'b', done: false } (from generateLetters)
-// At this point, 'generateLetters' is done. The 'yield*' expression resolves to 'b' (the last yielded value) and 'console.log' runs.
-console.log(combinedGen.next()); // { value: 3, done: false }
-console.log(combinedGen.next()); // { value: 'All done!', done: true }
+console.log(Effect.runSync(good)) // Output: 1
+console.log(Effect.runSync(good)) // Output: 2
 ```
 
 ---
 
-
 # Resources
 - [CONCEPTS.md](CONCEPTS.md) - Detailed explanation of TS concepts
+- [Constructor Cheatsheet](https://effect.website/docs/getting-started/creating-effects/#cheatsheet)

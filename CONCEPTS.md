@@ -121,6 +121,73 @@ The yield* part:
 
 In short, `yield*` lets you yield values from another generator or iterator.
 
+
+The `Generator<TYield, TReturn, TNext>` type is often used for this:
+- TYield: The type of values yielded.
+- TReturn: The type of the value returned when the generator completes (via return or reaching the end).
+- TNext: The type of the argument passed to next().
+
+```ts
+function* fibonacci(): Generator<number, void, boolean> {
+  let a = 0;
+  let b = 1;
+  while (true) {
+    const reset = yield a; // 'reset' will be of type boolean (from TNext)
+    if (reset) {
+      a = 0;
+      b = 1;
+    } else {
+      [a, b] = [b, a + b];
+    }
+  }
+}
+
+const fibGen = fibonacci();
+console.log(fibGen.next());      // { value: 0, done: false }
+console.log(fibGen.next());      // { value: 1, done: false }
+console.log(fibGen.next(true));  // { value: 0, done: false } (resets due to `true`)
+console.log(fibGen.next());      // { value: 1, done: false }
+```
+
+Key characteristics of yield*:
+- Delegates iteration: It essentially "flattens" the iteration of nested iterables.
+- Forwards next(), return(), and throw(): The yield* operator forwards calls to next(), return(), and throw() methods from the outer generator to the inner delegated iterator.
+- Returns the delegated iterator's return value: When the delegated iterator finishes (its done property becomes true), the value property of its final IteratorResult is returned by the yield* expression in the delegating generator. This is a crucial distinction from yield, which only yields the value.
+
+```ts
+function* generateNumbers(): Generator<number> {
+  yield 1;
+  yield 2;
+}
+
+function* generateLetters(): Generator<string> {
+  yield 'a';
+  yield 'b';
+}
+
+function* combinedGenerator(): Generator<number | string, string, undefined> {
+  yield 0;
+  yield* generateNumbers(); // Delegates to generateNumbers()
+  yield 'c';
+  const message = yield* generateLetters(); // Delegates to generateLetters(), message will be 'b' if letters returns a value
+  console.log("Returned from letters generator:", message); // This line will execute after generateLetters finishes
+  yield 3;
+  return "All done!"; // This is the final return value of combinedGenerator
+}
+
+const combinedGen = combinedGenerator();
+
+console.log(combinedGen.next()); // { value: 0, done: false }
+console.log(combinedGen.next()); // { value: 1, done: false } (from generateNumbers)
+console.log(combinedGen.next()); // { value: 2, done: false } (from generateNumbers)
+console.log(combinedGen.next()); // { value: 'c', done: false }
+console.log(combinedGen.next()); // { value: 'a', done: false } (from generateLetters)
+console.log(combinedGen.next()); // { value: 'b', done: false } (from generateLetters)
+// At this point, 'generateLetters' is done. The 'yield*' expression resolves to 'b' (the last yielded value) and 'console.log' runs.
+console.log(combinedGen.next()); // { value: 3, done: false }
+console.log(combinedGen.next()); // { value: 'All done!', done: true }
+```
+
 **Summary**
 - function* -> Defines a generator function that can yield multiple values
 - yield -> Inside a generator, pause and return a value, resume later
