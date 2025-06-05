@@ -396,6 +396,90 @@ console.log(Effect.runSync(good)) // Output: 2
 
 ---
 
+# Requirements Management
+A `service` refers to a reusable component or functionality that can be used by different parts of an application.
+Services are designed to provide specific capabilities and can be shared across multiple modules or components.
+
+*Example (Defining a Random Number Generator Service)*
+
+Let’s create a service for generating random numbers.
+- Identifier. We’ll use the string "MyRandomService" as the unique identifier.
+- Type. The service type will have a single operation called next that returns a random number.
+
+```ts
+import { Effect, Context } from "effect"
+
+// Declaring a tag for a service that generates random numbers
+class Random extends Context.Tag("MyRandomService")<
+  Random,
+  { readonly next: Effect.Effect<number> }
+>() {}
+```
+
+The exported Random value is known as a tag in Effect. 
+It acts as a representation of the service and allows Effect to locate and use this service at runtime.
+
+The service will be stored in a collection called Context, which can be thought of as a Map where the keys are tags and the values are services:
+
+```ts
+type Context = Map<Tag, Service>
+```
+
+**Using the service:**
+
+```ts
+import { Effect, Context } from "effect"
+
+// Declaring a tag for a service that generates random numbers
+class Random extends Context.Tag("MyRandomService")<
+  Random,
+  { readonly next: Effect.Effect<number> }
+>() {}
+
+// Using the service
+//
+//      ┌─── Effect<void, never, Random>
+//      ▼
+const program = Effect.gen(function* () {
+  const random = yield* Random
+  const randomNumber = yield* random.next
+  console.log(`random number: ${randomNumber}`)
+})
+
+// The following will result in a type-checking error... as there is not implementation provided...
+Effect.runSync(program)
+
+// Error ts(2379) ― Argument of type 'Effect<void, never, Random>' is not assignable to parameter of type 'Effect<void, never, never>' with 'exactOptionalPropertyTypes: true'. 
+// Consider adding 'undefined' to the types of the target's properties. Type 'Random' is not assignable to type 'never'.
+```
+
+**Providing a Service Implementation**
+
+In order to provide an actual implementation of the Random service, we can utilize the Effect.provideService function.
+
+```ts
+// Providing the implementation
+//
+//      ┌─── Effect<void, never, never>
+//      ▼
+const runnable = Effect.provideService(program, Random, {
+  next: Effect.sync(() => Math.random())
+})
+
+// Run successfully
+Effect.runPromise(runnable)
+/*
+Example Output:
+random number: 0.8241872233134417
+*/
+```
+
+
+
+
+---
+
+
 # Resources
 - [CONCEPTS.md](.docs/CONCEPTS.md) - Detailed explanation of TS concepts
 - [Constructor Cheatsheet](https://effect.website/docs/getting-started/creating-effects/#cheatsheet)

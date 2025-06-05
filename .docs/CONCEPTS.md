@@ -194,3 +194,17 @@ console.log(combinedGen.next()); // { value: 'All done!', done: true }
 - yield* -> Inside a generator, delegate to another generator or iterator
 
 ---
+
+**Union Types, Intersection Types, Literal Types:**
+```ts
+type ID = number | string; // Union type: can be a number OR a string
+let userId: ID = 123;
+userId = "abc";
+
+type FullName = { firstName: string } & { lastName: string }; // Intersection type: combines properties
+let personName: FullName = { firstName: "John", lastName: "Doe" };
+
+type StatusCode = 200 | 404 | 500; // Literal type: only these specific values are allowed
+let status: StatusCode = 200;
+// status = 201; // Error!
+```
