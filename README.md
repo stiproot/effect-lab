@@ -99,6 +99,26 @@ is shorthand for for extending a dynamically generated class.
 It is dynamic inheritance -> you extend a class produced at runtime, not a statically written base class.
 Referred to a a curried constructor function.
 
+Said another way:
+```ts
+class Random extends Context.Tag("MyRandomService")<
+  Random,
+  {
+    readonly next: Effect.Effect<number>
+  }
+>() {}
+```
+is something akin to:
+```ts
+class MyClass<T> {
+  // ...
+}
+class AnotherClass extends MyClass<AnotherClass> {
+  // Here, MyClass is parameterized with AnotherClass,
+  // but AnotherClass isn't structurally self-referential
+}
+```
+
 ---
 
 ## Creating Effects
@@ -474,8 +494,34 @@ random number: 0.8241872233134417
 */
 ```
 
+**Extracting the Service Type**
+
+```ts
+import { Effect, Context } from "effect"
+
+// Declaring a tag
+class Random extends Context.Tag("MyRandomService")<
+  Random,
+  { readonly next: Effect.Effect<number> }
+>() {}
+
+// Extracting the type
+type RandomShape = Context.Tag.Service<Random>
+/*
+This is equivalent to:
+type RandomShape = {
+    readonly next: Effect.Effect<number>;
+}
+*/
+```
 
 
+**Using multiple services**
+
+```ts
+
+
+```
 
 ---
 

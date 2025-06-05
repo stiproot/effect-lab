@@ -208,3 +208,21 @@ type StatusCode = 200 | 404 | 500; // Literal type: only these specific values a
 let status: StatusCode = 200;
 // status = 201; // Error!
 ```
+
+**Self-referential / Recursive Types:**
+
+Examples:
+
+```ts
+interface LinkedListNode {
+  value: any;
+  next: LinkedListNode | null; // Here, LinkedListNode refers to itself
+}
+```
+
+```ts
+type JSONObject = {
+  [key: string]: string | number | boolean | JSONObject | JSONArray;
+};
+type JSONArray = (string | number | boolean | JSONObject | JSONArray)[];
+```
