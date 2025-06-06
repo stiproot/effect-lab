@@ -72,7 +72,7 @@ const AlpacaClientFactoryLive = Layer.effect(
         Effect.gen(function* () {
           const { alpacaApiKey, alpacaSecretKey } = yield* config.getConfig.pipe(
             Effect.catchTag("ConfigError", (error) =>
-              Effect.dieMessage(`Failed to load configuration: ${error.message}`) // Or handle more gracefully
+              Effect.dieMessage(`Failed to load configuration: ${error.message}`)
             ))
 
           yield* logger.log("creating client...")
