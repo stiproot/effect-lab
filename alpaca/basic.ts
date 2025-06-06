@@ -35,7 +35,8 @@ const LoggerLive = Layer.effect(
       log: (msg: string) =>
         Effect.gen(function* () {
           const { alpacaApiKey, alpacaSecretKey } = yield* config.getConfig
-          console.log(`Alpaca API Key: ${alpacaApiKey}, Secret Key: ${alpacaSecretKey}`);
+          console.log(msg)
+          console.log(`(Alpaca API Key: ${alpacaApiKey}, Secret Key: ${alpacaSecretKey})`)
         })
     }
   })
@@ -55,9 +56,8 @@ const AlpacaClientFactoryLive = Layer.effect(
     return {
       createClient: () =>
         Effect.gen(function* () {
-          yield* logger.log("hey")
           const { alpacaApiKey, alpacaSecretKey } = yield* config.getConfig
-
+          yield* logger.log("creating client...")
           return new Alpaca({
             keyId: alpacaApiKey,
             secretKey: alpacaSecretKey,
@@ -68,4 +68,24 @@ const AlpacaClientFactoryLive = Layer.effect(
   })
 )
 
+const AppConfigLive = Layer.merge(ConfigLive, LoggerLive);
 
+const MainLive = AlpacaClientFactoryLive.pipe(
+  Layer.provideMerge(AppConfigLive),
+  Layer.provide(ConfigLive)
+)
+
+const program = Effect.gen(function* () {
+  const factory = yield* AlpacaClientFactory;
+  const logger = yield* Logger
+
+  const client = yield* factory.createClient()
+
+  yield* logger.log(`building client from program. Client type: ${typeof client}`)
+
+  return client;
+})
+
+const runnable = Effect.provide(program, MainLive)
+
+Effect.runPromise(runnable).then(() => console.log('done!'))
