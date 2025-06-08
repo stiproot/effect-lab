@@ -1,5 +1,5 @@
 {
-  "name": "sample-node",
+  "name": "lab",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,6 +13,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "effect": "^3.16.3"
+    "effect": "^3.16.4"
   }
 }

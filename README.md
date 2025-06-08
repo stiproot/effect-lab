@@ -1,6 +1,15 @@
 # effect-lab
 Personal laboratory for experimenting with Effect TS
 
+# Initializing a Sample Project
+```sh
+npm init -y
+npm install --save-dev typescript
+npx tsc --init
+npm install effect
+npx tsx index.ts
+```
+
 # Concepts
 The Effect type is an immutable description of a workflow or operation that is lazily executed. 
 This means that when you create an Effect, it doesn’t run immediately, but instead defines a program that can succeed, fail, or require some additional context to complete.
