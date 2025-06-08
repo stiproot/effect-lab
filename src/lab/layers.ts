@@ -1,4 +1,4 @@
-import { Effect, Context, Layer, Config, ConfigError } from "effect";
+import { Effect, Context, Layer, Config, ConfigError, Console } from "effect";
 import "dotenv/config";
 
 class Cfg extends Context.Tag("Config")<
@@ -34,6 +34,16 @@ const CfgLive = Layer.succeed(
     })
   }
 )
+  .pipe(
+    // Log a message if the layer acquisition succeeds
+    Layer.tap((ctx) =>
+      Console.log(`layer acquisition succeeded with:\n${ctx}`)
+    ),
+    // Log a message if the layer acquisition fails
+    Layer.tapError((err) =>
+      Console.log(`layer acquisition failed with:\n${err}`)
+    )
+  )
 
 class Logger extends Context.Tag("Logger")<
   Logger,
@@ -69,3 +79,4 @@ const runnable = Effect.provide(program, LoggerLive.pipe(Layer.provide(CfgLive))
 
 Effect.runPromise(runnable).then(console.log)
 
+// Effect.runFork(Layer.launch(LoggerLive.pipe(Layer.provide(CfgLive))))
