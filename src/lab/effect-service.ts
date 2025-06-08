@@ -2,8 +2,6 @@ import { FileSystem } from "@effect/platform"
 import { NodeFileSystem } from "@effect/platform-node"
 import { Effect, Console } from "effect"
 
-// The Effect.Service API provides a way to define a service in a single step, including its tag and layer.
-
 export class Cache extends Effect.Service<Cache>()("app/Cache", {
   effect: Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
