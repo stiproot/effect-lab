@@ -121,6 +121,7 @@ The yield* part:
 
 In short, `yield*` lets you yield values from another generator or iterator.
 
+Said another way, `yield*` in `Effect.gen` is used to "unwrap" the **successful** value of another `Effect`.
 
 The `Generator<TYield, TReturn, TNext>` type is often used for this:
 - TYield: The type of values yielded.
