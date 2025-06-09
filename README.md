@@ -12,7 +12,11 @@ npx tsx index.ts
 
 # Concepts
 The Effect type is an immutable description of a workflow or operation that is lazily executed. 
+An Effect is a higher-level concept that describes an effectful computation.
+It is lazy and immutable, meaning it represents a computation that may produce a value or fail but does not immediately execute.
 This means that when you create an Effect, it doesn’t run immediately, but instead defines a program that can succeed, fail, or require some additional context to complete.
+
+A fiber represents the running execution of an Effect. It can be interrupted or awaited to retrieve its result. Think of it as a way to control and interact with the ongoing computation.
 
 ## Form of Effect
          ┌─── Represents the success type
