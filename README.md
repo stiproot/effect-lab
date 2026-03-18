@@ -49,7 +49,8 @@ type Effect<Success, Error, Requirements> = (
 They can model synchronous, asynchronous, concurrent, and resourceful computations.
 
 **Immutability**
-  - Effect values are immutable, and every function in the Effect library produces a new Effect value.
+
+- Effect values are immutable, and every function in the Effect library produces a new Effect value.
 **Modeling Interactions**
   - These values do not perform any actions themselves, they simply model or describe effectful interactions.
 **Execution**
